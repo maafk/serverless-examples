@@ -11,6 +11,6 @@ It will run on a schedule Monday-Friday.
 ## Package and deploy application
 
 ```
-$ sam package --template-file template.yml --s3-bucket maafkn-sam-packages --s3-prefix snapshot-ebs --output-template-file template-deploy.yml
-$ sam deploy --template-file /Users/j/workspace/serverless-examples/aws-sam/snapshot-ebs/template-deploy.yml --stack-name snapshot-ebs --capabilities CAPABILITY_IAM
+$ sam package --template-file template.yml --s3-bucket my-bucket --s3-prefix snapshot-ebs --output-template-file template-deploy.yml
+$ sam deploy --template-file /path/to/template-deploy.yml --stack-name snapshot-ebs --capabilities CAPABILITY_IAM
 ```
