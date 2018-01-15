@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Create EBS snapshots on a schedule
+
+Resources:
+  SnapshotEBS:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: main.lambda_handler
+      Description: Create snapshots of EBS volumes attached to an instance
+      Events:
+        EveryDay:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 18 ? * MON-FRI *)
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Resource: '*'
+              Action:
+                - ec2:DescribeInstances
+                - ec2:CreateSnapshot
