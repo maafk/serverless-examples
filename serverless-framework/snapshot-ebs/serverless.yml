@@ -1,0 +1,26 @@
+service: sls-snapshot-ebs
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-east-1
+  memorySize: 128
+  deploymentBucket:
+    serverSideEncryption: AES256
+  stackTags:
+    app: serverless-demo
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - ec2:DescribeInstances
+        - ec2:CreateSnapshot
+      Resource: "*"
+
+functions:
+  slsEbsBackup:
+    handler: main.lambda_handler
+    description: Snapshot EBS volumes with a tag-key of backup
+    events:
+      - schedule: 
+          name: sls_ebs_backup_cron
+          description: Weekdays at noon UTC
+          rate: cron(0 12 ? * MON-FRI *))
