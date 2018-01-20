@@ -1,45 +1,101 @@
+import boto3
+import os
+import uuid
 from chalice import Chalice
-import random
+from chalice import BadRequestError, NotFoundError
 
 app = Chalice(app_name='dad-jokes')
+app.debug = True
+client = boto3.client('dynamodb')
 
-JOKES = [
-    {
-        "question": "How come you never see elephants hiding in trees?",
-        "punchline": "Because they're so good at it"
-    },
-    {
-        "question": "Why did the man smell bad on his birthday?",
-        "punchline": "He was turning farty"
-    },
-    {
-        "question": "Why couldn't the bicycle stand on it's own?",
-        "punchline": "Because it was two tired"
-    }
-]
 
 @app.route('/')
 def index():
+    response = client.scan(
+        TableName=os.environ['APP_TABLE_NAME'],
+        Limit=10
+    )
 
-    return random.choice(JOKES)
+    return response
 
 
-# The view function above will return {"hello": "world"}
-# whenever you make an HTTP GET request to '/'.
-#
-# Here are a few more examples:
-#
-# @app.route('/hello/{name}')
-# def hello_name(name):
-#    # '/hello/james' -> {"hello": "james"}
-#    return {'hello': name}
-#
-# @app.route('/users', methods=['POST'])
-# def create_user():
-#     # This is the JSON body the user sent in their POST request.
-#     user_as_json = app.current_request.json_body
-#     # We'll echo the json body back to the user in a 'user' key.
-#     return {'user': user_as_json}
-#
-# See the README documentation for more examples.
-#
+@app.route('/joke', methods=['POST'])
+def add_joke():
+    joke = app.current_request.json_body.get('joke', '')
+    punchline = app.current_request.json_body.get('punchline', '')
+
+    if not joke or not punchline:
+        raise BadRequestError(
+            "You must provide an object with keys of 'joke' and 'punchline'")
+    joke_uuid = str(uuid.uuid4())
+    response = client.put_item(
+        TableName=os.environ['APP_TABLE_NAME'],
+        Item={
+            'uuid': {'S': joke_uuid},
+            'votes': {'N': '0'},
+            'joke': {'S': joke},
+            'punchline': {'S': punchline}
+        }
+    )
+    print(response)
+    if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        return {"joke_uuid": joke_uuid}
+    else:
+        raise BadRequestError("Error writing to table")
+
+
+@app.route('/joke/{joke_uuid}', methods=['GET'])
+def get_joke(joke_uuid):
+    try:
+        response = client.get_item(
+            TableName=os.environ['APP_TABLE_NAME'],
+            Key={
+                'uuid': {'S': joke_uuid}
+            }
+        )
+    except Exception as e:
+        raise NotFoundError(joke_uuid)
+
+    return response
+
+
+@app.route('/joke/{joke_uuid}', methods=['PUT'])
+def vote_on_joke(joke_uuid):
+    vote_type = app.current_request.json_body.get('vote', 0)
+    if not vote_type or vote_type not in ['up', 'down']:
+        raise BadRequestError(
+            "Please provide 'up' or 'down' in your request body")
+
+    if vote_type == 'up':
+        UpdateExpression = 'SET votes = votes + :n'
+    else:
+        UpdateExpression = 'SET votes = votes - :n'
+    try:
+        response = client.update_item(
+            TableName=os.environ['APP_TABLE_NAME'],
+            Key={
+                'uuid': {'S': joke_uuid}
+            },
+            UpdateExpression=UpdateExpression,
+            ExpressionAttributeValues={
+                ":n": {"N": "1"}
+            }
+        )
+    except Exception as e:
+        raise NotFoundError(e)
+
+    return response
+
+
+@app.route('/joke/{joke_uuid}', methods=['DELETE'])
+def delete_joke(joke_uuid):
+    response = client.delete_item(
+        TableName=os.environ['APP_TABLE_NAME'],
+        Key={
+            'uuid': {'S': joke_uuid}
+        }
+    )
+    if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        return {"success": "Deleted {}".format(joke_uuid)}
+    else:
+        raise BadRequestError("Error writing to table")
