@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+    <head><title>Question</title></head>
+    <body>
+    <h1>Here is a question in the {{ question.category.name }} category</h1>
+
+        <h3>{{ question.question }}</h3>
+        <form id="questionForm">
+            <input type="radio" name="answer" id="option1" value="option1">
+                <label for="option1">{{ question.option1}}</label><br />
+            <input type="radio" name="answer" id="option2" value="option2">
+                <label for="option2">{{ question.option2}}</label><br />
+            <input type="radio" name="answer" id="option3" value="option3">
+                <label for="option3">{{ question.option3}}</label><br />
+            <input type="radio" name="answer" id="option4" value="option4">
+                <label for="option4">{{ question.option4}}</label><br />
+            <input type="hidden" name="correct", value="option{{ question.answers }}">
+            <input type="submit" value="Submit">
+        </form>
+        <a href="../">Back to Categories</a><br />
+        <a href="../question/{{ question.category.id }}">New question in this category</a>
+        <script>
+        function processForm(e){
+            if (e.preventDefault) e.preventDefault();
+            var correct_answer = document.forms['questionForm'].getElementsByTagName("input")[4].value;
+            var selected_answer = document.querySelector('input[name=answer]:checked').value;
+
+            if(correct_answer === selected_answer){
+                alert('You are correct!');
+            } else{
+                alert('WRONG!');
+            }
+
+            return false;
+
+        }
+        var form = document.getElementById('questionForm');
+        if (form.attachEvent) {
+            form.attachEvent("submit", processForm);
+        } else {
+            form.addEventListener("submit", processForm);
+        }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Categories</title>
+        {% include 'style.html' %}
+    </head>
+    <body>
+    <h1>here are the categories</h1>
+        <ul>
+            {% for category in categories %}
+                <li><a href="question/{{ category.id }}">{{ category.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
