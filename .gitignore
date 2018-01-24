@@ -1,2 +1,7 @@
 *-deploy.yml
 __pycache__/
+.DS_Store
+# chalice
+.chalice/
+# zappa
+zappa_settings.json
