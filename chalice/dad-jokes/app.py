@@ -9,7 +9,7 @@ app.debug = True
 client = boto3.client('dynamodb')
 
 
-@app.route('/')
+@app.route('/', cors=True)
 def index():
     response = client.scan(
         TableName=os.environ['APP_TABLE_NAME'],
@@ -59,7 +59,7 @@ def get_joke(joke_uuid):
     return response
 
 
-@app.route('/joke/{joke_uuid}', methods=['PUT'])
+@app.route('/joke/{joke_uuid}', methods=['PUT'], cors=True)
 def vote_on_joke(joke_uuid):
     vote_type = app.current_request.json_body.get('vote', 0)
     if not vote_type or vote_type not in ['up', 'down']:
