@@ -19,7 +19,7 @@ def index():
     return response
 
 
-@app.route('/joke', methods=['POST'])
+@app.route('/joke', methods=['POST'], cors=True)
 def add_joke():
     joke = app.current_request.json_body.get('joke', '')
     punchline = app.current_request.json_body.get('punchline', '')
@@ -44,7 +44,7 @@ def add_joke():
         raise BadRequestError("Error writing to table")
 
 
-@app.route('/joke/{joke_uuid}', methods=['GET'])
+@app.route('/joke/{joke_uuid}', methods=['GET'], cors=True)
 def get_joke(joke_uuid):
     try:
         response = client.get_item(
@@ -87,7 +87,7 @@ def vote_on_joke(joke_uuid):
     return response
 
 
-@app.route('/joke/{joke_uuid}', methods=['DELETE'])
+@app.route('/joke/{joke_uuid}', methods=['DELETE'], cors=True)
 def delete_joke(joke_uuid):
     response = client.delete_item(
         TableName=os.environ['APP_TABLE_NAME'],

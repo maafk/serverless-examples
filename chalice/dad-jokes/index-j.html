@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Jquery</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.min.js"
+      integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous">
+    </script>
+  
+</head>
+<body>
+<div>
+  <span>List of jokes</span>
+  <ul id="jokes">
+
+  </ul>
+
+
+</div>
+<script>
+  $.getJSON('http://127.0.0.1:8000/', function(data){
+    var jokes = data.Items;
+    var buffer = "";
+    for (var i = 0; i < jokes.length; i++) {
+      buffer += "<p id=\"joke_" + jokes[i].uuid.S + "\">" + jokes[i].joke.S;
+      buffer += "  <button id=\"button_" + jokes[i].uuid.S + "\""; 
+      buffer += "  onclick=\"togglePunchline('" + jokes[i].uuid.S + "')\">";
+      buffer += "  Show Punchline</button>";
+      buffer += "&nbsp; Votes: " + jokes[i].votes.N;
+      buffer += "</p>";
+      buffer += "<p style=\"display: none;\" id=\"punchline_" + jokes[i].uuid.S + "\">&emsp;" + jokes[i].punchline.S;
+      buffer += "&emsp;";
+      buffer += "<button type=\"button\" class=\"btn btn-success\"";
+      buffer += "onclick=\"upVote('" + jokes[i].uuid.S  + "')\"";
+      buffer += ">BWAHA!</button>";
+      buffer += "<button type=\"button\" class=\"btn btn-danger\"";
+      buffer += "onclick=\"downVote('" + jokes[i].uuid.S  + "')\"";
+      buffer += ">LAME!</button>";
+      buffer += "</p>";
+    }
+    $("#jokes").html(buffer)
+  });
+  function togglePunchline(uuid) {
+    $("#punchline_" + uuid).toggle()
+  }
+  function upVote(uuid){
+    $.ajax({
+      url: 'http://127.0.0.1:8000/joke/' + uuid,
+      type: 'PUT',
+      data: JSON.stringify({"vote": "up"})
+    });
+  }
+  function downVote(uuid){
+    $.ajax({
+      url: 'http://127.0.0.1:8000/joke/' + uuid,
+      type: 'PUT',
+      data: JSON.stringify({"vote": "down"})
+    });
+  }
+</script>
+</body>
+</html>

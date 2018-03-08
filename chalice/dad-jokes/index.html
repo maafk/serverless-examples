@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Vue</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.5"></script>
+
+</head>
+<body>
+<div id="app">
+<span>List of jokes</span>
+<ul id="jokes">
+  <li v-for="(joke, index) in jokes" :key="joke.uuid.S">
+    <p>{{joke.joke.S}}
+      <button v-on:click="toggle(index)">See Punchline</button>
+    </p>
+    <p v-show="joke.show" v-bind:index="index">{{joke.punchline.S}}</p>
+  </li>
+</ul>
+
+
+<!-- <ul id="jokes-2">
+  <li 
+    is="single-joke"
+    v-for="(joke, index) in jokes" :key="joke.uuid.S"
+    v-bind:joke="joke.joke.S"
+    v-bind:punchline="joke.punchline.S"
+    v-bind:show="joke.show"
+  ></li> -->
+<!--     <p>{{joke.joke.S}}
+      <button v-on:click="show = !show">see punchline</button>
+    </p>
+    <p v-if="show">{{joke.punchline.S}}</p> -->
+  
+</ul>
+</div>
+<script>
+Vue.component('single-joke', {
+  template: '<li>\
+    <p>{{joke}}\
+      <button @click="joke.show">See punchline</button>\
+    </p>\
+    <p v-show="show">{{punchline}}</p>\
+  </li>',
+  props: ['joke', 'punchline', 'show'],
+  methods: {
+    toggleShow() {
+      this.show = !this.show
+    },
+  }
+});
+var app = new Vue({
+  el: '#app',
+  data: {
+    jokes: {}
+  },
+  methods: {
+    toggle: function(index){
+      this.jokes[index]['show'] = !this.jokes[index]['show'];
+    }
+  },
+  created: function() {
+    this.$nextTick(function () {
+      this.$http.get('http://127.0.0.1:8000/').then(response =>{
+        var response_obj = JSON.parse(response.bodyText);
+        this.jokes = response_obj.Items
+        for (var i = 0; i < this.jokes.length; i++) {
+          this.jokes[i]['show'] = false;
+        }
+
+      });
+    })
+  }
+});
+</script>
+</body>
+</html>

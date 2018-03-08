@@ -5,3 +5,4 @@ __pycache__/
 .chalice/
 # zappa
 zappa_settings.json
+node_modules
