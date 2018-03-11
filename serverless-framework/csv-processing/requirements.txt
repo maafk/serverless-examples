@@ -10,6 +10,7 @@ cryptography==2.1.4
 docutils==0.14
 idna==2.6
 jmespath==0.9.3
+psycopg2==2.7.4
 pycparser==2.18
 python-dateutil==2.6.1
 requests==2.18.4
