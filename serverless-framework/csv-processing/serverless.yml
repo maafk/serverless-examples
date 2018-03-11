@@ -33,6 +33,28 @@ functions:
           rules:
             - prefix: chunked/
             - suffix: .csv
+  saveChunk:
+    handler: saveChunk.main
+    role: saveChunkRole
+    memorySize: 512
+    timeout: 30
+    environment:
+      DB_HOST: ${env.DB_HOST}
+      DB_USER: ${env.DB_USER}
+      DB_PASSWORD: ${env.DB_PASSWORD}
+    vpc:
+      securityGroupIds:
+        - sg-7e08b208
+      subnetIds:
+        - subnet-d793598d
+        - subnet-a66758c3
+    events:
+      - s3:
+          bucket: ${self:custom.csvBucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: processed/
+            - suffix: .csv    
 
 resources:
   Resources:
@@ -50,7 +72,7 @@ resources:
                   - lambda.amazonaws.com
               Action: sts:AssumeRole
         Policies:
-          - PolicyName: myPolicyName
+          - PolicyName: chunkRolePolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -89,7 +111,7 @@ resources:
                   - lambda.amazonaws.com
               Action: sts:AssumeRole
         Policies:
-          - PolicyName: myPolicyName
+          - PolicyName: processChunkPolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -113,6 +135,41 @@ resources:
                 - Effect: Allow
                   Action:
                     - s3:PutObject
+                  Resource: "arn:aws:s3:::${self:custom.csvBucket}/processed/*"
+    saveChunkRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        RoleName: csv-processing-saveChunkRole
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: saveChunkRolePolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: 
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
                   Resource: "arn:aws:s3:::${self:custom.csvBucket}/processed/*"
 plugins:
   - serverless-python-requirements
